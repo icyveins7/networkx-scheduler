@@ -1,6 +1,6 @@
 import networkx as nx
 
-from networkx_scheduler.scheduler import schedule
+from networkx_scheduler.scheduler import critical_path, schedule
 
 
 def build_graph() -> nx.DiGraph:
@@ -30,3 +30,33 @@ def test_schedule() -> None:
     assert task_times["A"] == (0, 3)
     assert task_times["C"] == (20, 25)
     assert makespan == 25
+
+
+def test_critical_path() -> None:
+    """Verify the longest-duration path for the sample dependency graph."""
+    graph = build_graph()
+
+    path = critical_path(graph)
+    assert path == ["B", "C"]
+    assert _path_runtime(graph, path) == 25
+
+    graph.nodes["A"]["duration"] = 3
+    path = critical_path(graph)
+    assert path == ["B", "C"]
+    assert _path_runtime(graph, path) == 25
+
+    graph.nodes["A"]["duration"] = 10
+    graph.nodes["B"]["duration"] = 5
+    path = critical_path(graph)
+    assert path == ["A", "C"]
+    assert _path_runtime(graph, path) == 15
+
+
+def test_critical_path_empty() -> None:
+    """An empty graph has no critical path."""
+    assert critical_path(nx.DiGraph()) == []
+
+
+def _path_runtime(graph: nx.DiGraph, path: list[str]) -> int:
+    """Return the summed node durations along ``path``."""
+    return sum(graph.nodes[node]["duration"] for node in path)
