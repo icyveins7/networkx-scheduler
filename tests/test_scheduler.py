@@ -4,7 +4,16 @@ from networkx_scheduler.scheduler import critical_path, schedule
 
 
 def build_graph() -> nx.DiGraph:
-    """Build the sample A/B -> C dependency graph and return it."""
+    """Build the sample A/B -> C dependency graph and return it.
+
+    Graph (node values are durations):
+
+    A [10] ──┐
+             ├──> C [5]
+    B [20] ──┘
+
+    C starts when both A and B have finished.
+    """
     graph = nx.DiGraph()
     graph.add_node("A", duration=10)
     graph.add_node("B", duration=20)

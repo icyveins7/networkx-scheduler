@@ -3,3 +3,19 @@
 - All functions and classes must have a docstring. Docstrings must be NumPy-style.
 - All function/method arguments must be typehint-ed.
 - Before a commit is made, all existing tests must pass.
+
+# Tests and Verification
+
+All tests revolve around sample graphs. These must be drawn so that the reader will easily be able to interpret the intended graph and its connections between nodes.
+
+For example, for nodes A->B and B->C, the following could be present in the docstring:
+
+```
+Graph (node values are durations):
+
+A [10] ──┐
+         ├──> C [5]
+B [20] ──┘
+
+C starts when both A and B have finished.
+```
