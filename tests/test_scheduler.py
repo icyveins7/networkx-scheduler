@@ -1,5 +1,7 @@
 import networkx as nx
 
+import pytest
+
 from networkx_scheduler.scheduler import critical_path, schedule
 
 
@@ -67,6 +69,92 @@ def test_critical_path() -> None:
 def test_critical_path_empty() -> None:
     """An empty graph has no critical path."""
     assert critical_path(nx.DiGraph()) == []
+
+
+def test_schedule_without_lag() -> None:
+    """Verify existing behavior when an edge has no lag.
+
+    Graph (node values are durations):
+
+    A [10] ──┐
+             ├──> B [5]
+
+    A runs 0-10; B starts when A finishes and runs 10-15; makespan is 15.
+    """
+    graph = nx.DiGraph()
+    graph.add_node("A", duration=10)
+    graph.add_node("B", duration=5)
+    graph.add_edge("A", "B")
+
+    task_times, makespan = schedule(graph)
+    assert task_times["A"] == (0, 10)
+    assert task_times["B"] == (10, 15)
+    assert makespan == 15
+
+
+def test_schedule_with_edge_lag() -> None:
+    """Verify scheduling when an edge carries a lag.
+
+    Graph (node values are durations):
+
+    A [10] --lag=3--\
+                    >-- B [5]
+
+    A runs 0-10, then a 3-unit delay, so B starts at 13 and finishes at 18.
+    """
+    graph = nx.DiGraph()
+    graph.add_node("A", duration=10)
+    graph.add_node("B", duration=5)
+    graph.add_edge("A", "B", lag=3)
+
+    task_times, makespan = schedule(graph)
+    assert task_times["A"] == (0, 10)
+    assert task_times["B"] == (13, 18)
+    assert makespan == 18
+
+
+def test_schedule_multiple_predecessors_with_lags() -> None:
+    """Verify scheduling with multiple predecessors and differing lags.
+
+    Graph (node values are durations):
+
+    A [10] --lag=3--\
+                   >-- C [5]
+    B [20] --lag=2--/
+
+    C starts at max(10 + 3, 20 + 2) = 22, finishes at 27; makespan is 27.
+    """
+    graph = nx.DiGraph()
+    graph.add_node("A", duration=10)
+    graph.add_node("B", duration=20)
+    graph.add_node("C", duration=5)
+    graph.add_edge("A", "C", lag=3)
+    graph.add_edge("B", "C", lag=2)
+
+    task_times, makespan = schedule(graph)
+    assert task_times["A"] == (0, 10)
+    assert task_times["B"] == (0, 20)
+    assert task_times["C"] == (22, 27)
+    assert makespan == 27
+
+
+def test_schedule_invalid_lags() -> None:
+    """Negative and non-integer lags raise ValueError."""
+    # Negative lag
+    graph = nx.DiGraph()
+    graph.add_node("A", duration=10)
+    graph.add_node("B", duration=5)
+    graph.add_edge("A", "B", lag=-1)
+    with pytest.raises(ValueError):
+        schedule(graph)
+
+    # Non-integer lag
+    graph = nx.DiGraph()
+    graph.add_node("A", duration=10)
+    graph.add_node("B", duration=5)
+    graph.add_edge("A", "B", lag=1.5)
+    with pytest.raises(ValueError):
+        schedule(graph)
 
 
 def _path_runtime(graph: nx.DiGraph, path: list[str]) -> int:

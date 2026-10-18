@@ -17,6 +17,24 @@ def _validate_durations(graph: nx.DiGraph) -> None:
             raise ValueError(f"node {node!r} has a negative duration")
 
 
+def _validate_lags(graph: nx.DiGraph) -> None:
+    """Validate that every edge has an optional non-negative integer ``lag``.
+
+    Raises
+    ------
+    ValueError
+        If any edge has a ``lag`` attribute that is negative or not an integer.
+    """
+    for _, _, data in graph.edges(data=True):
+        lag = data.get("lag")
+        if lag is None:
+            continue
+        if not isinstance(lag, int) or lag < 0:
+            raise ValueError(
+                f"edge {data.get('source')!r} -> {data.get('target')!r} has an invalid lag {lag!r}"
+            )
+
+
 def schedule(graph: nx.DiGraph) -> tuple[dict[str, tuple[int, int]], int]:
     """Schedule tasks in ``graph`` respecting dependency edges.
 
@@ -25,7 +43,8 @@ def schedule(graph: nx.DiGraph) -> tuple[dict[str, tuple[int, int]], int]:
     graph : nx.DiGraph
         A directed graph in which each node has a ``duration`` attribute, a
         non-negative integer. An edge ``A -> B`` means ``B`` cannot start until
-        ``A`` finishes.
+        ``A`` finishes. An edge may carry an optional non-negative integer
+        ``lag`` attribute, added to ``A``'s finish time before ``B`` starts.
 
     Returns
     -------
@@ -37,9 +56,11 @@ def schedule(graph: nx.DiGraph) -> tuple[dict[str, tuple[int, int]], int]:
     Raises
     ------
     ValueError
-        If any node is missing a ``duration`` attribute or has a negative one.
+        If any node is missing a ``duration`` attribute or has a negative one,
+        or if any edge has a negative or non-integer ``lag``.
     """
     _validate_durations(graph)
+    _validate_lags(graph)
 
     order = list(nx.topological_sort(graph))
 
@@ -47,7 +68,11 @@ def schedule(graph: nx.DiGraph) -> tuple[dict[str, tuple[int, int]], int]:
     for node in order:
         duration = graph.nodes[node]["duration"]
         start_time = max(
-            (task_times[predecessor][1] for predecessor in graph.predecessors(node)),
+            (
+                task_times[predecessor][1]
+                + graph.edges[predecessor, node].get("lag", 0)
+                for predecessor in graph.predecessors(node)
+            ),
             default=0,
         )
         task_times[node] = (start_time, start_time + duration)
