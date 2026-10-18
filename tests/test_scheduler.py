@@ -33,6 +33,7 @@ def test_schedule() -> None:
     assert task_times["C"] == (20, 25)
     assert makespan == 25
 
+    # A (3) no longer blocks C; C still waits for B (20), so C's times and the makespan are unchanged.
     graph.nodes["A"]["duration"] = 3
     task_times, makespan = schedule(graph)
 
@@ -49,11 +50,13 @@ def test_critical_path() -> None:
     assert path == ["B", "C"]
     assert _path_runtime(graph, path) == 25
 
+    # A (3) is no longer the longest predecessor of C, so the critical path stays B -> C.
     graph.nodes["A"]["duration"] = 3
     path = critical_path(graph)
     assert path == ["B", "C"]
     assert _path_runtime(graph, path) == 25
 
+    # Reset A, then shorten B to 5: A -> C (15) is now longer than B -> C (10).
     graph.nodes["A"]["duration"] = 10
     graph.nodes["B"]["duration"] = 5
     path = critical_path(graph)
