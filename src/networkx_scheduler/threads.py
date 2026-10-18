@@ -17,7 +17,7 @@ class ExecutionThread:
         self.thread_id = thread_id
         self._last_task = None
 
-    def add_task(self, task_id: str, duration: int) -> str:
+    def add_task(self, task_id: str, duration: int, lag: int = 0) -> str:
         """Add a task node to the thread and return its ID.
 
         When a previous task exists on this thread, a dependency edge is added
@@ -29,6 +29,9 @@ class ExecutionThread:
             The unique identifier of the task.
         duration : int
             The duration of the task, stored as a node attribute.
+        lag : int, optional
+            The delay on the edge from the previous task to this one. Defaults
+            to zero, preserving the behavior of an undelayed dependency.
 
         Returns
         -------
@@ -44,6 +47,6 @@ class ExecutionThread:
             raise ValueError(f"task {task_id!r} already exists in the graph")
         self.graph.add_node(task_id, duration=duration, thread_id=self.thread_id)
         if self._last_task is not None:
-            self.graph.add_edge(self._last_task, task_id)
+            self.graph.add_edge(self._last_task, task_id, lag=lag)
         self._last_task = task_id
         return task_id

@@ -92,3 +92,23 @@ def test_duplicate_task_id_rejected() -> None:
         assert "A" in str(exc)
         return
     raise AssertionError("duplicate task ID was not rejected")
+
+
+def test_add_task_with_lag() -> None:
+    """Verify add_task stores a non-default lag on the intra-thread edge.
+
+    Graph (node values are durations):
+
+    A [10] --lag=3--\
+                   >-- B [5]
+
+    add_task stores a 3-unit delay on the A -> B edge, so the scheduler starts
+    B at 13 and finishes it at 18.
+    """
+    graph = nx.DiGraph()
+    thread = ExecutionThread(graph, "T1")
+    thread.add_task("A", duration=10)
+    thread.add_task("B", duration=5, lag=3)
+
+    assert graph.edges["A", "B"]["lag"] == 3
+    assert schedule(graph)[0]["B"] == (13, 18)
