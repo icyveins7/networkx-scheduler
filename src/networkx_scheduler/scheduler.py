@@ -1,7 +1,28 @@
 import networkx as nx
 
 
-def schedule(graph):
+def schedule(graph: nx.DiGraph) -> tuple[dict[str, tuple[int, int]], int]:
+    """Schedule tasks in ``graph`` respecting dependency edges.
+
+    Parameters
+    ----------
+    graph : nx.DiGraph
+        A directed graph in which each node has a ``duration`` attribute, a
+        non-negative integer. An edge ``A -> B`` means ``B`` cannot start until
+        ``A`` finishes.
+
+    Returns
+    -------
+    tuple[dict[str, tuple[int, int]], int]
+        A ``(task_times, makespan)`` tuple. ``task_times`` maps each node ID to
+        its ``(start_time, end_time)``. ``makespan`` is the maximum end time, or
+        zero for an empty graph.
+
+    Raises
+    ------
+    ValueError
+        If any node is missing a ``duration`` attribute or has a negative one.
+    """
     for node in graph.nodes:
         duration = graph.nodes[node].get("duration")
         if duration is None:

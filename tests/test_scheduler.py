@@ -3,7 +3,8 @@ import networkx as nx
 from networkx_scheduler.scheduler import schedule
 
 
-def build_graph():
+def build_graph() -> nx.DiGraph:
+    """Build the sample A/B -> C dependency graph and return it."""
     graph = nx.DiGraph()
     graph.add_node("A", duration=10)
     graph.add_node("B", duration=20)
@@ -13,7 +14,8 @@ def build_graph():
     return graph
 
 
-def test_schedule():
+def test_schedule() -> None:
+    """Verify task times and makespan for the sample dependency graph."""
     graph = build_graph()
     task_times, makespan = schedule(graph)
 
