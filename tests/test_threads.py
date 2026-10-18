@@ -10,7 +10,7 @@ def build_graph() -> nx.DiGraph:
     Graph (node values are durations):
 
     A [10] ──> B [5] ──┐
-                     ├──> D [3]
+                       ├──> D [3]
     C [20] ────────────┘
 
     Threads T1: A -> B  and  T2: C -> D.
