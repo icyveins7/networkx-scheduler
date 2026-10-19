@@ -94,6 +94,25 @@ def test_duplicate_task_id_rejected() -> None:
     raise AssertionError("duplicate task ID was not rejected")
 
 
+def test_add_task_with_fractional_timing() -> None:
+    """Verify execution threads retain fractional durations and lag.
+
+    Graph (node values are durations):
+
+    A [1.25] --lag=0.5--> B [2.75]
+
+    B starts at 1.75 and finishes at 4.5.
+    """
+    graph = nx.DiGraph()
+    thread = ExecutionThread(graph, "T1")
+    thread.add_task("A", duration=1.25)
+    thread.add_task("B", duration=2.75, lag=0.5)
+
+    assert graph.nodes["A"]["duration"] == 1.25
+    assert graph.edges["A", "B"]["lag"] == 0.5
+    assert schedule(graph)[0]["B"] == (1.75, 4.5)
+
+
 def test_add_task_with_lag() -> None:
     """Verify add_task stores a non-default lag on the intra-thread edge.
 

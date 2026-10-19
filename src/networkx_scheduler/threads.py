@@ -17,7 +17,7 @@ class ExecutionThread:
         self.thread_id = thread_id
         self._last_task = None
 
-    def add_task(self, task_id: str, duration: int, lag: int = 0) -> str:
+    def add_task(self, task_id: str, duration: float, lag: float = 0) -> str:
         """Add a task node to the thread and return its ID.
 
         When a previous task exists on this thread, a dependency edge is added
@@ -27,11 +27,11 @@ class ExecutionThread:
         ----------
         task_id : str
             The unique identifier of the task.
-        duration : int
-            The duration of the task, stored as a node attribute.
-        lag : int, optional
-            The delay on the edge from the previous task to this one. Defaults
-            to zero, preserving the behavior of an undelayed dependency.
+        duration : float
+            The finite, non-negative duration stored on the task node.
+        lag : float, optional
+            The finite, non-negative delay on the edge from the previous task.
+            Defaults to zero, preserving the behavior of an undelayed dependency.
 
         Returns
         -------
